@@ -1,0 +1,2 @@
+models/efficientnet-s.keras filter=lfs diff=lfs merge=lfs -text
+models/efficientnet-l.keras filter=lfs diff=lfs merge=lfs -text
