@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 import numpy as np
-import os
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -12,8 +12,8 @@ model = tf.keras.models.load_model('models/efficientnet-s.keras')
 # Labels
 class_labels = ['Blur', 'Bokeh', 'Normal']
 
-def preprocess_image(image_path, target_size):
-    img = image.load_img(image_path, target_size=target_size)
+def preprocess_image(img, target_size):
+    img = img.resize(target_size)
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array = img_array / 255.0  # Normalize the image
@@ -21,30 +21,34 @@ def preprocess_image(image_path, target_size):
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
+    # Handle no files
+    if 'files' not in request.files:
+        return jsonify({'error': 'No files provided'}), 400
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No file provided'}), 400
+    files = request.files.getlist('files')
+    if len(files) == 0:
+        return jsonify({'error': 'No files provided'}), 400
 
-    # Save the file to a temporary location
-    file_path = f'./{file.filename}'
-    file.save(file_path)
+    predictions_list = []
 
-    # Preprocess the image to match training dimensions
-    preprocessed_image = preprocess_image(file_path, target_size=(260, 260))
+    # Handle each file's prediction
+    for file in files:
+        try:
+            img = Image.open(file)
+            preprocessed_image = preprocess_image(img, target_size=(260, 260))
+            predictions = model.predict(preprocessed_image)
+            class_predictions = {class_labels[i]: float(pred) for i, pred in enumerate(predictions[0])}
+            predictions_list.append({
+                'filename': file.filename,
+                'predictions': class_predictions
+            })
+        except Exception as e:
+            predictions_list.append({
+                'filename': file.filename,
+                'error': str(e)
+            })
 
-    # Make prediction
-    predictions = model.predict(preprocessed_image)
-
-    # Map predictions to class labels
-    class_predictions = {class_labels[i]: float(pred) for i, pred in enumerate(predictions[0])}
-
-    # Delete file
-    os.remove(file_path)
-    
-    return jsonify(class_predictions)
+    return jsonify(predictions_list)
 
 if __name__ == '__main__':
     app.run(debug=True)
