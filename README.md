@@ -30,22 +30,14 @@ print(response.json())
 
 Sample Response
 ```json
-[                                                                                                                                                                                               
-  {                                                                                                                                                                                             
-    "filename": "normal.jpg",                                                                                                                                                                   
-    "predictions": {                                                                                                                                                                            
-      "Blur": 0.00032279230072163045,                                                                                                                                                           
-      "Bokeh": 0.04760923981666565,                                                                                                                                                             
-      "Normal": 0.9520679712295532                                                                                                                                                              
-    }                                                                                                                                                                                           
+[
+  {
+    "filename": "normal.jpg",
+    "prediction": "Normal"
   },
   {
     "filename": "bokeh.jpg",
-    "predictions": {
-      "Blur": 0.10218694061040878,
-      "Bokeh": 0.8929504752159119,
-      "Normal": 0.004862597677856684
-    }
+    "prediction": "Bokeh"
   }
 ]
 ```

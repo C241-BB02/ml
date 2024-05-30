@@ -37,10 +37,10 @@ def predict():
             img = Image.open(file)
             preprocessed_image = preprocess_image(img, target_size=(260, 260))
             predictions = model.predict(preprocessed_image)
-            class_predictions = {class_labels[i]: float(pred) for i, pred in enumerate(predictions[0])}
+            predicted_class = class_labels[np.argmax(predictions[0])] # Get the label from max value
             predictions_list.append({
                 'filename': file.filename,
-                'predictions': class_predictions
+                'prediction': predicted_class
             })
         except Exception as e:
             predictions_list.append({
@@ -51,4 +51,4 @@ def predict():
     return jsonify(predictions_list)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
