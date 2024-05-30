@@ -1,0 +1,8 @@
+myenv
+pictures
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+*.log
+*.tmp
