@@ -51,7 +51,7 @@ https://capstone-ml-app-mo5jvyk6cq-as.a.run.app/
 
 Try with your pictures using the same cURL command as mentioned in Sample Usage
 
-`curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" -ttps://capstone-ml-app-mo5jvyk6cq-as.a.run.app/predict`
+`curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" https://capstone-ml-app-mo5jvyk6cq-as.a.run.app/predict`
 
 ## Rebuilding
 `docker build -t gcr.io/bangkit-capstone-ml/capstone-ml-app .`
