@@ -13,6 +13,8 @@ model = tf.keras.models.load_model('models/efficientnet-s.keras')
 class_labels = ['Blur', 'Bokeh', 'Normal']
 
 def preprocess_image(img, target_size):
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
     img = img.resize(target_size)
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)

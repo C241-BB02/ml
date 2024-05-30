@@ -9,13 +9,13 @@ Then run the app using
 Feel free to use the S or L version of the model. Loading the L model might take a while.
 
 ## Sample Usage
-`curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" http://localhost:5000/predict`
+`curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" -F "files=@pictures/blur.png" http://localhost:8080/predict`
 
 If you are using Python, use the `requests` library like so
 ```python
 import requests
 
-url = 'http://localhost:5000/predict'
+url = 'http://localhost:8080/predict'
 
 files = {
     'files': [
@@ -38,6 +38,10 @@ Sample Response
   {
     "filename": "bokeh.jpg",
     "prediction": "Bokeh"
+  },
+  {
+    "filename": "blur.png",
+    "prediction": "Blur"
   }
 ]
 ```
