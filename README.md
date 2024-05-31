@@ -9,24 +9,12 @@ Then run the app using
 Feel free to use the S or L version of the model. Loading the L model might take a while.
 
 ## Sample Usage
+### Image File
+Endpoint: `/predict`
+
+Sample Request
+
 `curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" -F "files=@pictures/blur.png" http://localhost:8080/predict`
-
-If you are using Python, use the `requests` library like so
-```python
-import requests
-
-url = 'http://localhost:8080/predict'
-
-files = {
-    'files': [
-        ('files', open('/path/to/image1.jpg', 'rb')),
-        ('files', open('/path/to/image2.jpg', 'rb'))
-    ]
-}
-
-response = requests.post(url, files=files)
-print(response.json())
-```
 
 Sample Response
 ```json
@@ -46,12 +34,40 @@ Sample Response
 ]
 ```
 
+### Image URL
+Endpoint: `/predict-url`
+
+Sample Request
+```json
+{
+    "urls": [
+        "https://st5.depositphotos.com/55662820/62581/i/450/depositphotos_625819662-stock-photo-blurred-purpose-urban-traffic-lights.jpg",
+        "https://photographylife.com/wp-content/uploads/2009/12/Creamy-Bokeh.jpg",
+        "https://sussexbylines.co.uk/wp-content/uploads/2024/03/cat-out-hunting.jpg"
+    ]
+}
+```
+
+Sample Response
+```json
+[
+    {
+        "prediction": "Blur",
+        "url": "https://st5.depositphotos.com/55662820/62581/i/450/depositphotos_625819662-stock-photo-blurred-purpose-urban-traffic-lights.jpg"
+    },
+    {
+        "prediction": "Bokeh",
+        "url": "https://photographylife.com/wp-content/uploads/2009/12/Creamy-Bokeh.jpg"
+    },
+    {
+        "prediction": "Normal",
+        "url": "https://sussexbylines.co.uk/wp-content/uploads/2024/03/cat-out-hunting.jpg"
+    }
+]
+```
+
 ## Deployment
 https://capstone-ml-app-mo5jvyk6cq-as.a.run.app/
-
-Try with your pictures using the same cURL command as mentioned in Sample Usage
-
-`curl -X POST -F "files=@pictures/normal.jpg" -F "files=@pictures/bokeh.jpg" https://capstone-ml-app-mo5jvyk6cq-as.a.run.app/predict`
 
 ## Rebuilding
 `docker build -t gcr.io/bangkit-capstone-ml/capstone-ml-app .`

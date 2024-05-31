@@ -1,27 +1,16 @@
 from flask import Flask, request, jsonify
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
-import numpy as np
+from werkzeug.middleware.profiler import ProfilerMiddleware
+import asyncio
+from utils import fetch_image
+from model import make_prediction, load_model
+import aiohttp
 from PIL import Image
-import requests
-from io import BytesIO
 
 app = Flask(__name__)
+app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[0.01])
 
 # Load the model at the start
-model = tf.keras.models.load_model('models/efficientnet-s.keras')
-
-# Labels
-class_labels = ['Blur', 'Bokeh', 'Normal']
-
-def preprocess_image(img, target_size):
-    if img.mode != 'RGB':
-        img = img.convert('RGB')
-    img = img.resize(target_size)
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = img_array / 255.0  # Normalize the image
-    return img_array
+model = load_model()
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -39,9 +28,7 @@ def predict():
     for file in files:
         try:
             img = Image.open(file)
-            preprocessed_image = preprocess_image(img, target_size=(260, 260))
-            predictions = model.predict(preprocessed_image)
-            predicted_class = class_labels[np.argmax(predictions[0])] # Get the label from max value
+            predicted_class = make_prediction(img, model)
             predictions_list.append({
                 'filename': file.filename,
                 'prediction': predicted_class
@@ -56,7 +43,7 @@ def predict():
 
 
 @app.route('/predict-url', methods=['POST'])
-def predict_url():
+async def predict_url():
     data = request.get_json()
     if 'urls' not in data:
         return jsonify({'error': 'No URLs provided'}), 400
@@ -67,31 +54,30 @@ def predict_url():
 
     predictions_list = []
 
-    for url in urls:
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Ensure we notice bad responses
-            img = Image.open(BytesIO(response.content))
-            preprocessed_image = preprocess_image(img, target_size=(260, 260))
-            predictions = model.predict(preprocessed_image)
-            predicted_class = class_labels[np.argmax(predictions[0])] # Get the label from max value
-            predictions_list.append({
-                'url': url,
-                'prediction': predicted_class
-            })
-        except requests.exceptions.RequestException as req_err:
-            predictions_list.append({
-                'url': url,
-                'error': f"Request error: {str(req_err)}"
-            })
-        except Exception as e:
-            predictions_list.append({
-                'url': url,
-                'error': str(e)
-            })
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_image(session, url) for url in urls]
+        images = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for url, img in zip(urls, images):
+            if isinstance(img, Exception):
+                predictions_list.append({
+                    'url': url,
+                    'error': str(img)
+                })
+            else:
+                try:
+                    predicted_class = make_prediction(img, model)
+                    predictions_list.append({
+                        'url': url,
+                        'prediction': predicted_class
+                    })
+                except Exception as e:
+                    predictions_list.append({
+                        'url': url,
+                        'error': str(e)
+                    })
 
     return jsonify(predictions_list)
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
